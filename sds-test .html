@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>抑郁自评量表(SDS)测试</title>
+    <style>
+        :root {
+            --color-primary: #ffb6c1;
+            --color-secondary: #b0e0e6;
+            --color-accent: #ffdab9;
+            --bg-gradient: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+            --card-bg: rgba(255, 255, 255, 0.9);
+            --progress-color: #ff8c94;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "幼圆", "微软雅黑", sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            background: var(--bg-gradient);
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 768px;
+            margin: 0 auto;
+        }
+
+        .title {
+            text-align: center;
+            font-size: 2.5rem;
+            margin: 20px 0;
+            text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.5);
+            color: #333;
+        }
+
+        .progress-wrap {
+            height: 8px;
+            background: #f0f0f0;
+            border-radius: 4px;
+            margin: 20px 0;
+            display: none;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: var(--progress-color);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .progress-text {
+            text-align: center;
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .question-card {
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: all 0.3s ease;
+        }
+
+        .intro-text {
+            font-size: 1rem;
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .question-text {
+            font-size: 1.2rem;
+            line-height: 1.6;
+            color: #444;
+            margin-bottom: 30px;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .option-btn {
+            padding: 15px 20px;
+            border: none;
+            border-radius: 12px;
+            background: white;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: left;
+            font-size: 1rem;
+        }
+
+        .option-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.12);
+        }
+
+        .option-btn:active {
+            transform: translateY(0) scale(0.98);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .result-container {
+            display: none;
+            padding: 30px;
+            background: linear-gradient(45deg, var(--color-primary) 0%, var(--color-accent) 100%);
+            border-radius: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            text-align: center;
+            margin-top: 50px;
+        }
+
+        .result-title {
+            font-size: 2rem;
+            color: #333;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.5);
+        }
+
+        .result-text {
+            font-size: 1.2rem;
+            line-height: 1.6;
+            color: #222;
+            margin-bottom: 30px;
+        }
+
+        .score-highlight {
+            font-weight: bold;
+            color: #e91e63;
+            font-size: 1.3rem;
+        }
+
+        .restart-btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 20px;
+            background: white;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+        }
+
+        .restart-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+        }
+
+        .fireworks {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .firework {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: radial-gradient(circle, #ffeb3b 0%, #ff9800 100%);
+            border-radius: 50%;
+            animation: firework 1s ease-out;
+        }
+
+        @keyframes firework {
+            0% {
+                transform: scale(0);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(20);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">抑郁自评量表(SDS)</h1>
+        <div class="progress-text" id="progressText">1/20</div>
+        <div class="progress-wrap" id="progressWrap">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+        <div class="question-card" id="questionCard">
+            <div class="question-text" id="questionText"></div>
+            <div class="options" id="options"></div>
+        </div>
+        <div class="result-container" id="resultContainer">
+            <div class="fireworks" id="fireworks"></div>
+            <h2 class="result-title" id="resultTitle"></h2>
+            <p class="result-text" id="resultText"></p>
+            <button class="restart-btn" onclick="restartTest()">再试一次</button>
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            { id: 1, text: "我觉得闷闷不乐，情绪低沉", type: "positive" },
+            { id: 2, text: "我觉得一天之中早晨最好", type: "negative" },
+            { id: 3, text: "老是莫名地哭出来或觉得想哭", type: "positive" },
+            { id: 4, text: "我晚上睡眠不好", type: "positive" },
+            { id: 5, text: "我吃饭像平时一样多", type: "negative" },
+            { id: 6, text: "我与异性密切接触时和以往一样感到愉快", type: "negative" },
+            { id: 7, text: "我感觉自己的体重在下降", type: "positive" },
+            { id: 8, text: "我有便秘的烦恼", type: "positive" },
+            { id: 9, text: "我觉得心跳比平时快了", type: "positive" },
+            { id: 10, text: "我无缘无故感到疲乏", type: "positive" },
+            { id: 11, text: "我的头脑跟平时一样清楚", type: "negative" },
+            { id: 12, text: "我做事情像平时一样不感到有什么困难", type: "negative" },
+            { id: 13, text: "我坐卧不安, 难以保持平静", type: "positive" },
+            { id: 14, text: "我对未来感到有希望", type: "negative" },
+            { id: 15, text: "我比平时容易生气激动", type: "positive" },
+            { id: 16, text: "我觉得做出决定是容易的事", type: "negative" },
+            { id: 17, text: "我觉得自己是有用的人，别人需要我", type: "negative" },
+            { id: 18, text: "我的生活过得很有意义", type: "negative" },
+            { id: 19, text: "我认为如果我死了别人会生活得更好", type: "positive" },
+            { id: 20, text: "对于平常感兴趣的事我仍旧感兴趣", type: "negative" }
+        ];
+
+        const optionMap = { '①': 1, '②': 2, '③': 3, '④': 4 };
+        const introContent = `
+            <div class="intro-text">
+                请您仔细阅读以下每一道题目，然后对照自己最近一周来的感受，从四个选项中选择最符合您实际情况的一项。<br>
+                ①“很少”表示出现类似情况的频率少于1天或没有出现；<br>
+                ②“有时”表示至少2-3天会出现类似情况；<br>
+                ③“经常”表示至少4-5天会出现类似情况；<br>
+                ④“持续”表示几乎每天都会出现类似情况。
+            </div>
+        `;
+        let currentQuestion = 0;
+        let totalScore = 0;
+        const options = ["①很少", "②有时", "③经常", "④持续"];
+
+        function initTest() {
+            showQuestion(currentQuestion);
+            document.getElementById('progressWrap').style.display = 'block';
+        }
+
+        function showQuestion(index) {
+            const question = questions[index];
+            const questionText = document.getElementById('questionText');
+            const optionsContainer = document.getElementById('options');
+            
+            // 仅在第一题显示填写说明
+            const prefix = index === 0 ? introContent : '';
+            questionText.innerHTML = `${prefix}${index + 1}、${question.text}`;
+            
+            optionsContainer.innerHTML = options.map(opt => `
+                <button class="option-btn" onclick="selectOption(${index}, '${opt}')">
+                    ${opt}
+                </button>
+            `).join('');
+
+            updateProgress(index);
+        }
+
+        function selectOption(questionIndex, option) {
+            const question = questions[questionIndex];
+            const symbol = option[0];
+            const baseScore = optionMap[symbol];
+            
+            if (question.type === 'positive') {
+                totalScore += baseScore;
+            } else {
+                totalScore += (5 - baseScore);
+            }
+
+            currentQuestion++;
+            if (currentQuestion < questions.length) {
+                showQuestion(currentQuestion);
+            } else {
+                showResult();
+            }
+        }
+
+        function updateProgress(index) {
+            const progressText = document.getElementById('progressText');
+            const progressBar = document.getElementById('progressBar');
+            const progress = ((index + 1) / questions.length) * 100;
+            
+            progressText.textContent = `${index + 1}/${questions.length}`;
+            progressBar.style.width = `${progress}%`;
+        }
+
+        function showResult() {
+            const TScore = Math.round(totalScore * 1.25);
+            const resultContainer = document.getElementById('resultContainer');
+            const resultTitle = document.getElementById('resultTitle');
+            const resultText = document.getElementById('resultText');
+            const fireworks = document.getElementById('fireworks');
+
+            document.getElementById('questionCard').style.display = 'none';
+            document.getElementById('progressWrap').style.display = 'none';
+            document.getElementById('progressText').style.display = 'none';
+            
+            resultContainer.style.display = 'block';
+            
+            for (let i = 0; i < 20; i++) {
+                const firework = document.createElement('div');
+                firework.className = 'firework';
+                firework.style.left = `${Math.random() * 100}%`;
+                firework.style.top = `${Math.random() * 100}%`;
+                firework.style.background = `radial-gradient(circle, ${getRandomColor()} 0%, ${getRandomColor()} 100%)`;
+                fireworks.appendChild(firework);
+                setTimeout(() => firework.remove(), 1000);
+            }
+
+            let resultLevel, resultDesc;
+            if (TScore < 53) {
+                resultLevel = "无明显抑郁倾向";
+                resultDesc = `你的粗分为<span class="score-highlight">${totalScore}</span>分，标准分（T分）为<span class="score-highlight">${TScore}</span>分，目前没有明显的抑郁倾向~ 保持积极心态，继续享受生活吧！😊`;
+            } else if (TScore <= 62) {
+                resultLevel = "轻度抑郁";
+                resultDesc = `你的粗分为<span class="score-highlight">${totalScore}</span>分，标准分（T分）为<span class="score-highlight">${TScore}</span>分，存在轻度抑郁倾向。建议多与亲友沟通，适当增加户外活动哦~ 🌞`;
+            } else if (TScore <= 72) {
+                resultLevel = "中度抑郁";
+                resultDesc = `你的粗分为<span class="score-highlight">${totalScore}</span>分，标准分（T分）为<span class="score-highlight">${TScore}</span>分，存在中度抑郁倾向。请及时寻求专业心理帮助，你并不孤单！🤝`;
+            } else {
+                resultLevel = "重度抑郁";
+                resultDesc = `你的粗分为<span class="score-highlight">${totalScore}</span>分，标准分（T分）为<span class="score-highlight">${TScore}</span>分，存在重度抑郁倾向。请尽快联系专业心理医生或医疗机构，你值得被好好照顾！❤️`;
+            }
+
+            resultTitle.textContent = resultLevel;
+            resultText.innerHTML = resultDesc;
+        }
+
+        function getRandomColor() {
+            const colors = ['#ffeb3b', '#ff9800', '#4caf50', '#2196f3', '#9c27b0'];
+            return colors[Math.floor(Math.random() * colors.length)];
+        }
+
+        function restartTest() {
+            currentQuestion = 0;
+            totalScore = 0;
+            document.getElementById('questionCard').style.display = 'block';
+            document.getElementById('progressWrap').style.display = 'block';
+            document.getElementById('progressText').style.display = 'block';
+            document.getElementById('resultContainer').style.display = 'none';
+            showQuestion(0);
+        }
+
+        initTest();
+    </script>
